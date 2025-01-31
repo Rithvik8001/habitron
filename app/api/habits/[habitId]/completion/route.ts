@@ -1,11 +1,11 @@
 import { auth } from "@clerk/nextjs/server";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { completeHabit, uncompleteHabit } from "@/lib/habits";
 import { prisma } from "@/lib/db";
 
 export async function POST(
-  request: Request,
-  context: { params: { habitId: string } }
+  request: NextRequest,
+  { params }: { params: { habitId: string } }
 ) {
   try {
     const { userId } = await auth();
@@ -14,7 +14,7 @@ export async function POST(
     }
 
     const habit = await prisma.habit.findUnique({
-      where: { id: context.params.habitId },
+      where: { id: params.habitId },
     });
 
     if (!habit || habit.userId !== userId) {
@@ -25,7 +25,7 @@ export async function POST(
     const { date } = body;
 
     const completion = await completeHabit(
-      context.params.habitId,
+      params.habitId,
       date ? new Date(date) : undefined
     );
 
@@ -37,8 +37,8 @@ export async function POST(
 }
 
 export async function DELETE(
-  request: Request,
-  context: { params: { habitId: string } }
+  request: NextRequest,
+  { params }: { params: { habitId: string } }
 ) {
   try {
     const { userId } = await auth();
@@ -47,7 +47,7 @@ export async function DELETE(
     }
 
     const habit = await prisma.habit.findUnique({
-      where: { id: context.params.habitId },
+      where: { id: params.habitId },
     });
 
     if (!habit || habit.userId !== userId) {
@@ -57,10 +57,7 @@ export async function DELETE(
     const url = new URL(request.url);
     const date = url.searchParams.get("date");
 
-    await uncompleteHabit(
-      context.params.habitId,
-      date ? new Date(date) : undefined
-    );
+    await uncompleteHabit(params.habitId, date ? new Date(date) : undefined);
 
     return new NextResponse(null, { status: 204 });
   } catch (error) {
