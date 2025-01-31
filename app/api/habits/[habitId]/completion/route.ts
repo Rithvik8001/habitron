@@ -1,10 +1,10 @@
 import { auth } from "@clerk/nextjs/server";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { completeHabit, uncompleteHabit } from "@/lib/habits";
 import { prisma } from "@/lib/db";
 
 export async function POST(
-  req: Request,
+  req: NextRequest,
   { params }: { params: { habitId: string } }
 ) {
   try {
@@ -37,7 +37,7 @@ export async function POST(
 }
 
 export async function DELETE(
-  req: Request,
+  req: NextRequest,
   { params }: { params: { habitId: string } }
 ) {
   try {
@@ -54,7 +54,7 @@ export async function DELETE(
       return new NextResponse("Not found", { status: 404 });
     }
 
-    const { searchParams } = new URL(req.url);
+    const { searchParams } = req.nextUrl;
     const date = searchParams.get("date");
 
     await uncompleteHabit(params.habitId, date ? new Date(date) : undefined);

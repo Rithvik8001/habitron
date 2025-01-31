@@ -1,9 +1,9 @@
 import { auth } from "@clerk/nextjs/server";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createHabit, getUserHabits } from "@/lib/habits";
 import { HabitFrequency } from "@prisma/client";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     const { userId } = await auth();
     if (!userId) {
@@ -35,7 +35,7 @@ export async function POST(req: Request) {
   }
 }
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   try {
     const { userId } = await auth();
     if (!userId) {
