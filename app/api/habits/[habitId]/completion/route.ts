@@ -54,8 +54,8 @@ export async function DELETE(
       return new NextResponse("Not found", { status: 404 });
     }
 
-    const url = new URL(request.url);
-    const date = url.searchParams.get("date");
+    const { searchParams } = new URL(request.url);
+    const date = searchParams.get("date");
 
     await uncompleteHabit(params.habitId, date ? new Date(date) : undefined);
 
