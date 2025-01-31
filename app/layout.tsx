@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 
+import { GeistSans } from "geist/font/sans";
 import "./globals.css";
+import { ClerkProvider } from "@clerk/nextjs";
 
 export const metadata: Metadata = {
-  title: "Habitron - AI-Powered Habit Tracking",
-  description:
-    "Build better habits with AI-powered insights, streak tracking, and personalized motivation. Track daily, weekly, and monthly habits with our modern, minimalistic app.",
+  title: "Habitron - AI-Powered Habit Tracker",
+  description: "Build better habits with AI-powered insights and tracking",
+  icons: [{ rel: "icon", url: "/favicon.ico" }],
   keywords: [
     "habit tracking",
     "AI habits",
@@ -23,8 +25,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className="min-h-screen antialiased">{children}</body>
-    </html>
+    <ClerkProvider>
+      <html lang="en">
+        <body className={GeistSans.className}>{children}</body>
+      </html>
+    </ClerkProvider>
   );
 }

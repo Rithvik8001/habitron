@@ -27,7 +27,7 @@ const tiers = [
       "Daily reminders",
       "Achievement system",
       "AI-powered insights",
-      "Daily AI motivation",
+      "Daily motivation",
     ],
     featured: true,
   },
