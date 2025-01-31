@@ -2,23 +2,55 @@
 
 import { ContributionsGrid } from "../components/dashboard/contributions-grid";
 import { CalendarDays, CheckCircle2, Flame, Target } from "lucide-react";
-
-// Temporary data for the contributions grid
-const getDummyData = () => {
-  const data = [];
-  const today = new Date();
-  for (let i = 364; i >= 0; i--) {
-    const date = new Date(today);
-    date.setDate(date.getDate() - i);
-    data.push({
-      date: date.toISOString().split("T")[0],
-      completed: Math.random() > 0.5, // 50% chance of completion
-    });
-  }
-  return data;
-};
+import { useHabits } from "@/hooks/use-habits";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function DashboardPage() {
+  const {
+    habits,
+    isLoading,
+    getCompletionsForDate,
+    getCompletionRate,
+    getLongestStreak,
+    getCurrentStreak,
+  } = useHabits();
+
+  // Generate data for contributions grid
+  const getContributionsData = () => {
+    const data = [];
+    const today = new Date();
+    for (let i = 364; i >= 0; i--) {
+      const date = new Date(today);
+      date.setDate(date.getDate() - i);
+      data.push({
+        date: date.toISOString().split("T")[0],
+        completed:
+          habits?.some((habit) =>
+            habit.completions.some(
+              (c) => new Date(c.date).toDateString() === date.toDateString()
+            )
+          ) ?? false,
+      });
+    }
+    return data;
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-8">
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-10 w-32" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <Skeleton key={i} className="h-32 rounded-xl" />
+          ))}
+        </div>
+        <Skeleton className="h-96 rounded-xl" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-8">
       <div className="flex items-center justify-between">
@@ -31,28 +63,32 @@ export default function DashboardPage() {
             <Target className="h-4 w-4 text-muted-foreground" />
             <div className="text-sm font-medium">Total Habits</div>
           </div>
-          <div className="mt-2 text-2xl font-bold">5</div>
+          <div className="mt-2 text-2xl font-bold">{habits?.length ?? 0}</div>
         </div>
         <div className="rounded-xl border bg-card p-6">
           <div className="flex items-center gap-2">
             <Flame className="h-4 w-4 text-orange-500" />
             <div className="text-sm font-medium">Active Streak</div>
           </div>
-          <div className="mt-2 text-2xl font-bold">7 days 🔥</div>
+          <div className="mt-2 text-2xl font-bold">
+            {getCurrentStreak()} days {getCurrentStreak() > 0 ? "🔥" : ""}
+          </div>
         </div>
         <div className="rounded-xl border bg-card p-6">
           <div className="flex items-center gap-2">
             <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
             <div className="text-sm font-medium">Completion Rate</div>
           </div>
-          <div className="mt-2 text-2xl font-bold">85%</div>
+          <div className="mt-2 text-2xl font-bold">{getCompletionRate()}%</div>
         </div>
         <div className="rounded-xl border bg-card p-6">
           <div className="flex items-center gap-2">
             <CalendarDays className="h-4 w-4 text-muted-foreground" />
             <div className="text-sm font-medium">Longest Streak</div>
           </div>
-          <div className="mt-2 text-2xl font-bold">14 days</div>
+          <div className="mt-2 text-2xl font-bold">
+            {getLongestStreak()} days
+          </div>
         </div>
       </div>
 
@@ -64,7 +100,7 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="p-6">
-          <ContributionsGrid data={getDummyData()} />
+          <ContributionsGrid data={getContributionsData()} />
         </div>
       </div>
 
@@ -73,19 +109,57 @@ export default function DashboardPage() {
           <h2 className="text-xl font-semibold">Recent Activity</h2>
         </div>
         <div className="divide-y">
-          {[...Array(5)].map((_, i) => (
-            <div key={i} className="flex items-center gap-4 p-6">
-              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30">
-                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+          {habits
+            ?.flatMap((habit) =>
+              habit.completions.slice(0, 5).map((completion) => ({
+                habitName: habit.name,
+                date: new Date(completion.date),
+              }))
+            )
+            .sort((a, b) => b.date.getTime() - a.date.getTime())
+            .slice(0, 5)
+            .map((activity, i) => (
+              <div key={i} className="flex items-center gap-4 p-6">
+                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                </div>
+                <div>
+                  <div className="font-medium">
+                    {activity.habitName} completed
+                  </div>
+                  <div className="text-sm text-muted-foreground">
+                    {formatRelativeTime(activity.date)}
+                  </div>
+                </div>
               </div>
-              <div>
-                <div className="font-medium">Morning Meditation completed</div>
-                <div className="text-sm text-muted-foreground">2 hours ago</div>
-              </div>
+            ))}
+          {(!habits?.length ||
+            !habits.some((h) => h.completions.length > 0)) && (
+            <div className="p-6 text-sm text-muted-foreground">
+              No recent activity. Start by creating a new habit!
             </div>
-          ))}
+          )}
         </div>
       </div>
     </div>
   );
+}
+
+function formatRelativeTime(date: Date) {
+  const now = new Date();
+  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+  const diffInMinutes = Math.floor(diffInSeconds / 60);
+  const diffInHours = Math.floor(diffInMinutes / 60);
+  const diffInDays = Math.floor(diffInHours / 24);
+
+  if (diffInDays > 0) {
+    return `${diffInDays} ${diffInDays === 1 ? "day" : "days"} ago`;
+  }
+  if (diffInHours > 0) {
+    return `${diffInHours} ${diffInHours === 1 ? "hour" : "hours"} ago`;
+  }
+  if (diffInMinutes > 0) {
+    return `${diffInMinutes} ${diffInMinutes === 1 ? "minute" : "minutes"} ago`;
+  }
+  return "Just now";
 }
