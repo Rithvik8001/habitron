@@ -3,9 +3,15 @@ import { NextRequest, NextResponse } from "next/server";
 import { completeHabit, uncompleteHabit } from "@/lib/habits";
 import { prisma } from "@/lib/db";
 
+type RouteContext = {
+  params: {
+    habitId: string;
+  };
+};
+
 export async function POST(
   req: NextRequest,
-  { params }: { params: { habitId: string } }
+  context: RouteContext
 ) {
   try {
     const { userId } = await auth();
@@ -14,7 +20,7 @@ export async function POST(
     }
 
     const habit = await prisma.habit.findUnique({
-      where: { id: params.habitId },
+      where: { id: context.params.habitId },
     });
 
     if (!habit || habit.userId !== userId) {
@@ -25,7 +31,7 @@ export async function POST(
     const { date } = body;
 
     const completion = await completeHabit(
-      params.habitId,
+      context.params.habitId,
       date ? new Date(date) : undefined
     );
 
@@ -38,7 +44,7 @@ export async function POST(
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { habitId: string } }
+  context: RouteContext
 ) {
   try {
     const { userId } = await auth();
@@ -47,7 +53,7 @@ export async function DELETE(
     }
 
     const habit = await prisma.habit.findUnique({
-      where: { id: params.habitId },
+      where: { id: context.params.habitId },
     });
 
     if (!habit || habit.userId !== userId) {
@@ -57,7 +63,7 @@ export async function DELETE(
     const { searchParams } = req.nextUrl;
     const date = searchParams.get("date");
 
-    await uncompleteHabit(params.habitId, date ? new Date(date) : undefined);
+    await uncompleteHabit(context.params.habitId, date ? new Date(date) : undefined);
 
     return new NextResponse(null, { status: 204 });
   } catch (error) {
