@@ -1,17 +1,12 @@
 import { auth } from "@clerk/nextjs/server";
-import { NextRequest, NextResponse } from "next/server";
+import { type NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { completeHabit, uncompleteHabit } from "@/lib/habits";
 import { prisma } from "@/lib/db";
 
-type RouteContext = {
-  params: {
-    habitId: string;
-  };
-};
-
 export async function POST(
-  req: NextRequest,
-  context: RouteContext
+  request: NextRequest,
+  { params }: { params: { habitId: string } }
 ) {
   try {
     const { userId } = await auth();
@@ -20,18 +15,18 @@ export async function POST(
     }
 
     const habit = await prisma.habit.findUnique({
-      where: { id: context.params.habitId },
+      where: { id: params.habitId },
     });
 
     if (!habit || habit.userId !== userId) {
       return new NextResponse("Not found", { status: 404 });
     }
 
-    const body = await req.json();
+    const body = await request.json();
     const { date } = body;
 
     const completion = await completeHabit(
-      context.params.habitId,
+      params.habitId,
       date ? new Date(date) : undefined
     );
 
@@ -43,8 +38,8 @@ export async function POST(
 }
 
 export async function DELETE(
-  req: NextRequest,
-  context: RouteContext
+  request: NextRequest,
+  { params }: { params: { habitId: string } }
 ) {
   try {
     const { userId } = await auth();
@@ -53,17 +48,17 @@ export async function DELETE(
     }
 
     const habit = await prisma.habit.findUnique({
-      where: { id: context.params.habitId },
+      where: { id: params.habitId },
     });
 
     if (!habit || habit.userId !== userId) {
       return new NextResponse("Not found", { status: 404 });
     }
 
-    const { searchParams } = req.nextUrl;
+    const { searchParams } = request.nextUrl;
     const date = searchParams.get("date");
 
-    await uncompleteHabit(context.params.habitId, date ? new Date(date) : undefined);
+    await uncompleteHabit(params.habitId, date ? new Date(date) : undefined);
 
     return new NextResponse(null, { status: 204 });
   } catch (error) {
