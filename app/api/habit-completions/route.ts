@@ -1,31 +1,32 @@
 import { auth } from "@clerk/nextjs/server";
-import { NextResponse, NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 import { completeHabit, uncompleteHabit } from "@/lib/habits";
 import { prisma } from "@/lib/db";
 
-export async function POST(
-  request: NextRequest,
-  { params }: { params: { habitId: string } }
-) {
+export async function POST(request: Request) {
   try {
     const { userId } = await auth();
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
+    const body = await request.json();
+    const { habitId, date } = body;
+
+    if (!habitId) {
+      return new NextResponse("Missing habitId", { status: 400 });
+    }
+
     const habit = await prisma.habit.findUnique({
-      where: { id: params.habitId },
+      where: { id: habitId },
     });
 
     if (!habit || habit.userId !== userId) {
       return new NextResponse("Not found", { status: 404 });
     }
 
-    const body = await request.json();
-    const { date } = body;
-
     const completion = await completeHabit(
-      params.habitId,
+      habitId,
       date ? new Date(date) : undefined
     );
 
@@ -36,28 +37,30 @@ export async function POST(
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { habitId: string } }
-) {
+export async function DELETE(request: Request) {
   try {
     const { userId } = await auth();
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const habitId = searchParams.get("habitId");
+    const date = searchParams.get("date");
+
+    if (!habitId) {
+      return new NextResponse("Missing habitId", { status: 400 });
+    }
+
     const habit = await prisma.habit.findUnique({
-      where: { id: params.habitId },
+      where: { id: habitId },
     });
 
     if (!habit || habit.userId !== userId) {
       return new NextResponse("Not found", { status: 404 });
     }
 
-    const { searchParams } = new URL(request.url);
-    const date = searchParams.get("date");
-
-    await uncompleteHabit(params.habitId, date ? new Date(date) : undefined);
+    await uncompleteHabit(habitId, date ? new Date(date) : undefined);
 
     return new NextResponse(null, { status: 204 });
   } catch (error) {

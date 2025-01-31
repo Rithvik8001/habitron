@@ -37,37 +37,33 @@ export async function createHabit({
 }
 
 export async function completeHabit(habitId: string, date?: Date) {
-  const response = await fetch(`/api/habits/${habitId}/completion`, {
+  const res = await fetch("/api/habit-completions", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      date: date?.toISOString(),
-    }),
+    body: JSON.stringify({ habitId, date: date?.toISOString() }),
   });
 
-  if (!response.ok) {
+  if (!res.ok) {
     throw new Error("Failed to complete habit");
   }
 
-  return response.json();
+  return res.json();
 }
 
 export async function uncompleteHabit(habitId: string, date?: Date) {
-  const url = new URL(
-    `/api/habits/${habitId}/completion`,
-    window.location.origin
-  );
+  const url = new URL("/api/habit-completions", window.location.origin);
+  url.searchParams.set("habitId", habitId);
   if (date) {
     url.searchParams.set("date", date.toISOString());
   }
 
-  const response = await fetch(url, {
+  const res = await fetch(url.toString(), {
     method: "DELETE",
   });
 
-  if (!response.ok) {
+  if (!res.ok) {
     throw new Error("Failed to uncomplete habit");
   }
 }
