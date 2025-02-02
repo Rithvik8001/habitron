@@ -5,7 +5,7 @@ import { HabitFrequency } from "@prisma/client";
 
 export async function PATCH(
   request: Request,
-  { params }: { params: { habitId: string } }
+  context: { params: Promise<{ habitId: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -15,12 +15,13 @@ export async function PATCH(
 
     const body = await request.json();
     const { name, description, frequency } = body;
+    const habitId = (await context.params).habitId;
 
     if (!name || !frequency || !Object.values(HabitFrequency).includes(frequency)) {
       return new NextResponse("Invalid request body", { status: 400 });
     }
 
-    const habit = await updateHabit(params.habitId, {
+    const habit = await updateHabit(habitId, {
       name,
       description,
       frequency,
@@ -35,7 +36,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { habitId: string } }
+  context: { params: Promise<{ habitId: string }> }
 ) {
   try {
     const { userId } = await auth();
@@ -43,7 +44,8 @@ export async function DELETE(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    await deleteHabit(params.habitId);
+    const habitId = (await context.params).habitId;
+    await deleteHabit(habitId);
     return new NextResponse(null, { status: 204 });
   } catch (error) {
     console.error("[HABIT_DELETE]", error);
