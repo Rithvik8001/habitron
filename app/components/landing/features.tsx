@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  Brain,
-  LineChart,
-  MessageSquare,
-  Trophy,
-} from "lucide-react";
+import { Brain, LineChart, MessageSquare, Trophy } from "lucide-react";
 
 const features = [
   {
@@ -46,7 +41,8 @@ export function Features() {
             Everything you need to build better habits
           </p>
           <p className="mt-6 text-base leading-8 text-muted-foreground sm:text-lg">
-            Simple yet powerful tools to help you create and maintain good habits.
+            Simple yet powerful tools to help you create and maintain good
+            habits.
           </p>
         </div>
         <div className="mx-auto mt-12 max-w-2xl sm:mt-16 lg:mt-20 lg:max-w-none">

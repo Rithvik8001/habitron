@@ -30,7 +30,13 @@ export async function createHabit({
   });
 
   if (!response.ok) {
-    throw new Error("Failed to create habit");
+    const error = await response.text();
+    console.error("Failed to create habit:", {
+      status: response.status,
+      statusText: response.statusText,
+      error,
+    });
+    throw new Error(`Failed to create habit: ${error}`);
   }
 
   return response.json();
@@ -65,5 +71,41 @@ export async function uncompleteHabit(habitId: string, date?: Date) {
 
   if (!res.ok) {
     throw new Error("Failed to uncomplete habit");
+  }
+}
+
+export async function updateHabit(
+  habitId: string,
+  data: {
+    name: string;
+    description?: string;
+    frequency: HabitFrequency;
+  }
+) {
+  const res = await fetch("/api/habits", {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ habitId, ...data }),
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to update habit");
+  }
+
+  return res.json();
+}
+
+export async function deleteHabit(habitId: string) {
+  const url = new URL("/api/habits", window.location.origin);
+  url.searchParams.set("habitId", habitId);
+
+  const res = await fetch(url.toString(), {
+    method: "DELETE",
+  });
+
+  if (!res.ok) {
+    throw new Error("Failed to delete habit");
   }
 }

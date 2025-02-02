@@ -6,18 +6,21 @@ const testimonials = [
       "Habitron's AI insights have completely transformed how I approach my daily routines. The personalized suggestions are spot-on!",
     author: "Sarah M.",
     role: "Fitness Coach",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah",
   },
   {
     content:
       "The streak system keeps me incredibly motivated. I've never stuck to my habits this consistently before!",
     author: "Michael R.",
     role: "Software Engineer",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Michael",
   },
   {
     content:
       "As a student, the flexible scheduling is perfect for my changing routine. Plus, the AI motivation keeps me going!",
     author: "Emily K.",
     role: "Graduate Student",
+    avatar: "https://api.dicebear.com/7.x/avataaars/svg?seed=Emily",
   },
 ];
 
@@ -47,7 +50,11 @@ export function Testimonials() {
                 </div>
                 <div className="mt-6 border-t border-gray-100 pt-6">
                   <div className="flex items-center gap-x-4">
-                    <div className="h-10 w-10 rounded-full bg-gray-100" />
+                    <img
+                      src={testimonial.avatar}
+                      alt={`Avatar of ${testimonial.author}`}
+                      className="h-10 w-10 rounded-full bg-gray-100"
+                    />
                     <div>
                       <div className="font-semibold">{testimonial.author}</div>
                       <div className="text-sm text-muted-foreground">

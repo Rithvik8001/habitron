@@ -2,6 +2,7 @@
 
 import { ArrowRight } from "lucide-react";
 import { Button } from "../ui/button";
+import Link from "next/link";
 
 export function Hero() {
   return (
@@ -31,21 +32,20 @@ export function Hero() {
                 </span>
               </a>
             </div>
-            <h1 className="text-3xl font-bold tracking-tight sm:text-5xl lg:text-6xl">
+            <h1 className="text-3xl font-bold tracking-tighter sm:text-5xl lg:text-6xl">
               Build better habits with AI-powered insights
             </h1>
             <p className="mt-6 text-base leading-8 text-muted-foreground sm:text-lg">
               Track your habits, get personalized recommendations, and stay
-              motivated with AI-powered feedback. Simple, effective, and designed
-              for real progress.
+              motivated with AI-powered feedback. Simple, effective, and
+              designed for real progress.
             </p>
             <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-x-6">
-              <Button size="lg" className="w-full sm:w-auto gap-2">
-                Get Started <ArrowRight className="h-4 w-4" />
-              </Button>
-              <Button variant="outline" size="lg" className="w-full sm:w-auto">
-                Learn more
-              </Button>
+              <Link href="/sign-up">
+                <Button size="lg" className="w-full sm:w-auto gap-2">
+                  Get Started <ArrowRight className="h-4 w-4" />
+                </Button>
+              </Link>
             </div>
           </div>
         </div>

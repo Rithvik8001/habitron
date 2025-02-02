@@ -1,7 +1,12 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ArrowRight, CheckCircle2, ClipboardList, UserPlus } from "lucide-react";
+import {
+  ArrowRight,
+  CheckCircle2,
+  ClipboardList,
+  UserPlus,
+} from "lucide-react";
 
 const steps = [
   {

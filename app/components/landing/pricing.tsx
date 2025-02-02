@@ -49,7 +49,7 @@ export function Pricing() {
           </p>
         </div>
 
-        <div className="mx-auto mt-12 max-w-md space-y-8 sm:mt-16">
+        <div className="mx-auto mt-12 max-w-7xl grid grid-cols-1 gap-8 sm:grid-cols-2 sm:mt-16">
           {tiers.map((tier) => (
             <div
               key={tier.id}
@@ -85,8 +85,8 @@ export function Pricing() {
                 </span>
               </div>
               <Button
-                className="mt-6"
-                variant={tier.featured ? "secondary" : "outline"}
+                className="mt-6 text-black"
+                variant={tier.featured ? "secondary" : "default"}
               >
                 Get started
               </Button>

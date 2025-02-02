@@ -1,19 +1,20 @@
-import { prisma } from './db'
-import { HabitFrequency } from '@prisma/client'
+import { auth } from "@clerk/nextjs/server";
+import { prisma } from "./db";
+import { HabitFrequency } from "@prisma/client";
 
 export type CreateHabitInput = {
-  name: string
-  description?: string
-  frequency: HabitFrequency
-  userId: string
-}
+  name: string;
+  description?: string;
+  frequency: HabitFrequency;
+  userId: string;
+};
 
 export async function createHabit(input: CreateHabitInput) {
   return prisma.habit.create({
     data: {
       ...input,
     },
-  })
+  });
 }
 
 export async function getUserHabits(userId: string) {
@@ -30,14 +31,14 @@ export async function getUserHabits(userId: string) {
           },
         },
         orderBy: {
-          date: 'desc',
+          date: "desc",
         },
       },
     },
     orderBy: {
-      createdAt: 'desc',
+      createdAt: "desc",
     },
-  })
+  });
 }
 
 export async function completeHabit(habitId: string, date: Date = new Date()) {
@@ -46,10 +47,13 @@ export async function completeHabit(habitId: string, date: Date = new Date()) {
       habitId,
       date,
     },
-  })
+  });
 }
 
-export async function uncompleteHabit(habitId: string, date: Date = new Date()) {
+export async function uncompleteHabit(
+  habitId: string,
+  date: Date = new Date()
+) {
   return prisma.completion.deleteMany({
     where: {
       habitId,
@@ -57,7 +61,7 @@ export async function uncompleteHabit(habitId: string, date: Date = new Date()) 
         equals: date,
       },
     },
-  })
+  });
 }
 
 export async function getHabitCompletions(habitId: string, days: number = 365) {
@@ -69,7 +73,59 @@ export async function getHabitCompletions(habitId: string, days: number = 365) {
       },
     },
     orderBy: {
-      date: 'desc',
+      date: "desc",
     },
-  })
+  });
+}
+
+export async function updateHabit(
+  habitId: string,
+  data: {
+    name: string;
+    description?: string;
+    frequency: HabitFrequency;
+  }
+) {
+  const { userId } = await auth();
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+
+  const habit = await prisma.habit.findUnique({
+    where: { id: habitId },
+  });
+
+  if (!habit || habit.userId !== userId) {
+    throw new Error("Not found");
+  }
+
+  return prisma.habit.update({
+    where: { id: habitId },
+    data,
+  });
+}
+
+export async function deleteHabit(habitId: string) {
+  const { userId } = await auth();
+  if (!userId) {
+    throw new Error("Unauthorized");
+  }
+
+  const habit = await prisma.habit.findUnique({
+    where: { id: habitId },
+  });
+
+  if (!habit || habit.userId !== userId) {
+    throw new Error("Not found");
+  }
+
+  // Delete all completions first
+  await prisma.completion.deleteMany({
+    where: { habitId },
+  });
+
+  // Then delete the habit
+  return prisma.habit.delete({
+    where: { id: habitId },
+  });
 }

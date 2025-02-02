@@ -4,12 +4,15 @@ import { ContributionsGrid } from "../components/dashboard/contributions-grid";
 import { CalendarDays, CheckCircle2, Flame, Target } from "lucide-react";
 import { useHabits } from "@/hooks/use-habits";
 import { Skeleton } from "@/components/ui/skeleton";
+import { CreateHabitDialog } from "@/components/create-habit-dialog";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
 
 export default function DashboardPage() {
   const {
     habits,
     isLoading,
-    getCompletionsForDate,
+
     getCompletionRate,
     getLongestStreak,
     getCurrentStreak,
@@ -55,6 +58,12 @@ export default function DashboardPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold">Dashboard</h1>
+        <div className="flex items-center gap-4">
+          <Button variant="outline" asChild>
+            <Link href="/dashboard/habits">View All Habits</Link>
+          </Button>
+          <CreateHabitDialog />
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">

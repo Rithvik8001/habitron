@@ -10,6 +10,9 @@ export function useHabits() {
   const { data: habits, isLoading } = useQuery<HabitWithCompletions[]>({
     queryKey: ["habits"],
     queryFn: getHabits,
+    staleTime: 0, // Always fetch fresh data
+    refetchOnMount: true, // Refetch when component mounts
+    refetchOnWindowFocus: true, // Refetch when window gains focus
   });
 
   const getCompletionsForDate = (habitId: string, date: Date) => {
@@ -22,7 +25,8 @@ export function useHabits() {
   const getCompletionRate = () => {
     if (!habits?.length) return 0;
     const totalCompletions = habits.reduce(
-      (acc: number, habit: HabitWithCompletions) => acc + habit.completions.length,
+      (acc: number, habit: HabitWithCompletions) =>
+        acc + habit.completions.length,
       0
     );
     const totalDays = habits.length * 30; // Last 30 days
@@ -65,10 +69,11 @@ export function useHabits() {
     for (let i = 0; i < 365; i++) {
       const date = new Date(today);
       date.setDate(date.getDate() - i);
-      
+
       const hasCompletion = habits.some((habit: HabitWithCompletions) =>
         habit.completions.some(
-          (c: Completion) => new Date(c.date).toDateString() === date.toDateString()
+          (c: Completion) =>
+            new Date(c.date).toDateString() === date.toDateString()
         )
       );
 

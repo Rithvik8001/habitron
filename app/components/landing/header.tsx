@@ -29,7 +29,10 @@ export function Header() {
         aria-label="Global"
       >
         <div className="flex lg:flex-1">
-          <Link href="/" className="-m-1.5 p-1.5 text-xl font-bold">
+          <Link
+            href="/"
+            className="-m-1.5 p-1.5 text-3xl tracking-tighter font-extrabold"
+          >
             Habitron
           </Link>
         </div>
