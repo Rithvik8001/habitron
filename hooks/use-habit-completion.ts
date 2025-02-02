@@ -30,6 +30,7 @@ export function useHabitCompletion() {
               return {
                 ...habit,
                 completions: [
+                  ...habit.completions,
                   {
                     id: "temp-" + Date.now(),
                     habitId,
@@ -54,7 +55,7 @@ export function useHabitCompletion() {
       }
     },
     onSettled: () => {
-      // Always refetch after error or success to ensure data is correct
+      // Always refetch after error or success
       queryClient.invalidateQueries({ queryKey: ["habits"] });
     },
   });
@@ -62,7 +63,7 @@ export function useHabitCompletion() {
   const uncompleteMutation = useMutation({
     mutationFn: ({ habitId, date }: { habitId: string; date?: Date }) =>
       uncompleteHabit(habitId, date),
-    onMutate: async ({ habitId }) => {
+    onMutate: async ({ habitId, date }) => {
       await queryClient.cancelQueries({ queryKey: ["habits"] });
 
       const previousHabits = queryClient.getQueryData<HabitWithCompletions[]>([
@@ -76,7 +77,11 @@ export function useHabitCompletion() {
             if (habit.id === habitId) {
               return {
                 ...habit,
-                completions: [],
+                completions: habit.completions.filter(
+                  (completion) =>
+                    new Date(completion.date).toDateString() !==
+                    (date || new Date()).toDateString()
+                ),
               };
             }
             return habit;
@@ -99,5 +104,6 @@ export function useHabitCompletion() {
   return {
     completeHabit: completeMutation.mutate,
     uncompleteHabit: uncompleteMutation.mutate,
+    isLoading: completeMutation.isPending || uncompleteMutation.isPending,
   };
 }
