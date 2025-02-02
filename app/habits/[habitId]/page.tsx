@@ -5,17 +5,16 @@ import { format } from "date-fns";
 import { getHabitWithCompletions, getHabitHistory } from "@/lib/habits";
 import { HabitStatus } from "./components/habit-status";
 
-type HabitPageProps = {
-  params: {
-    habitId: string;
-  };
-  searchParams: { [key: string]: string | string[] | undefined };
+type PageProps = {
+  params: Promise<{ habitId: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 };
 
 export async function generateMetadata({
   params,
-}: HabitPageProps): Promise<Metadata> {
-  const habit = await getHabitWithCompletions(params.habitId);
+}: PageProps): Promise<Metadata> {
+  const { habitId } = await params;
+  const habit = await getHabitWithCompletions(habitId);
 
   if (!habit) {
     return {
@@ -51,8 +50,9 @@ async function getHabitDetails(habitId: string) {
   };
 }
 
-export default async function HabitPage({ params }: HabitPageProps) {
-  const habit = await getHabitDetails(params.habitId);
+export default async function HabitPage({ params }: PageProps) {
+  const { habitId } = await params;
+  const habit = await getHabitDetails(habitId);
 
   if (!habit) {
     notFound();
