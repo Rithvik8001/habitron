@@ -1,174 +1,153 @@
-"use client";
+import { auth } from "@clerk/nextjs/server";
+import { redirect } from "next/navigation";
+import { CalendarView } from "@/app/components/dashboard/calendar-view";
+import { Stats } from "@/app/components/dashboard/stats";
+import { prisma } from "@/lib/db";
 
-import { ContributionsGrid } from "../components/dashboard/contributions-grid";
-import { CalendarDays, CheckCircle2, Flame, Target } from "lucide-react";
-import { useHabits } from "@/hooks/use-habits";
-import { Skeleton } from "@/components/ui/skeleton";
-import { CreateHabitDialog } from "@/components/create-habit-dialog";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
-
-export default function DashboardPage() {
-  const {
-    habits,
-    isLoading,
-
-    getCompletionRate,
-    getLongestStreak,
-    getCurrentStreak,
-  } = useHabits();
-
-  // Generate data for contributions grid
-  const getContributionsData = () => {
-    const data = [];
-    const today = new Date();
-    for (let i = 364; i >= 0; i--) {
-      const date = new Date(today);
-      date.setDate(date.getDate() - i);
-      data.push({
-        date: date.toISOString().split("T")[0],
-        completed:
-          habits?.some((habit) =>
-            habit.completions.some(
-              (c) => new Date(c.date).toDateString() === date.toDateString()
-            )
-          ) ?? false,
-      });
-    }
-    return data;
-  };
-
-  if (isLoading) {
-    return (
-      <div className="space-y-8">
-        <div className="flex items-center justify-between">
-          <Skeleton className="h-10 w-32" />
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-          {[...Array(4)].map((_, i) => (
-            <Skeleton key={i} className="h-32 rounded-xl" />
-          ))}
-        </div>
-        <Skeleton className="h-96 rounded-xl" />
-      </div>
-    );
+export default async function DashboardPage() {
+  const { userId } = await auth();
+  if (!userId) {
+    redirect("/");
   }
+
+  const habits = await prisma.habit.findMany({
+    where: {
+      userId,
+    },
+    include: {
+      completions: true,
+    },
+  });
+
+  // Calculate active streak
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  let currentStreak = 0;
+  let streakDates: { date: Date; habits: string[] }[] = [];
+
+  // Look back up to 30 days to find the streak
+  for (let i = 0; i < 30; i++) {
+    const date = new Date(today);
+    date.setDate(date.getDate() - i);
+
+    // Get completions for this date
+    const completedHabits = habits.filter((habit) =>
+      habit.completions.some((completion) => {
+        const completionDate = new Date(completion.date);
+        return completionDate.toDateString() === date.toDateString();
+      })
+    );
+
+    if (completedHabits.length > 0) {
+      currentStreak = i === 0 ? 1 : currentStreak + 1;
+      streakDates.unshift({
+        date,
+        habits: completedHabits.map((h) => h.name),
+      });
+    } else {
+      if (i === 0) {
+        // Check if there were completions yesterday to continue the streak
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+        const yesterdayCompletions = habits.filter((habit) =>
+          habit.completions.some((completion) => {
+            const completionDate = new Date(completion.date);
+            return completionDate.toDateString() === yesterday.toDateString();
+          })
+        );
+        if (yesterdayCompletions.length > 0) {
+          currentStreak = 1;
+          streakDates.unshift({
+            date: yesterday,
+            habits: yesterdayCompletions.map((h) => h.name),
+          });
+        }
+      }
+      break;
+    }
+  }
+
+  // Calculate longest streak
+  let longestStreak = 0;
+  let currentLongestStreak = 0;
+  let longestStreakDates: { date: Date; habits: string[] }[] = [];
+  let tempStreakDates: { date: Date; habits: string[] }[] = [];
+
+  // Get all dates in ascending order
+  const allDates = Array.from(
+    new Set(
+      habits.flatMap((h) =>
+        h.completions.map((c) => new Date(c.date).toDateString())
+      )
+    )
+  )
+    .map((d) => new Date(d))
+    .sort((a, b) => a.getTime() - b.getTime());
+
+  for (let i = 0; i < allDates.length; i++) {
+    const currentDate = allDates[i];
+    const nextDate = i < allDates.length - 1 ? allDates[i + 1] : null;
+
+    const completedHabits = habits.filter((habit) =>
+      habit.completions.some((completion) => {
+        const completionDate = new Date(completion.date);
+        return completionDate.toDateString() === currentDate.toDateString();
+      })
+    );
+
+    if (completedHabits.length > 0) {
+      currentLongestStreak++;
+      tempStreakDates.push({
+        date: currentDate,
+        habits: completedHabits.map((h) => h.name),
+      });
+
+      if (
+        !nextDate ||
+        nextDate.getTime() - currentDate.getTime() > 24 * 60 * 60 * 1000
+      ) {
+        if (currentLongestStreak > longestStreak) {
+          longestStreak = currentLongestStreak;
+          longestStreakDates = [...tempStreakDates];
+        }
+        currentLongestStreak = 0;
+        tempStreakDates = [];
+      }
+    }
+  }
+
+  // Calculate completion rate for the last 30 days
+  const thirtyDaysAgo = new Date(today);
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+  const completionsLast30Days = habits.reduce((total, habit) => {
+    return (
+      total +
+      habit.completions.filter((completion) => {
+        const completionDate = new Date(completion.date);
+        return completionDate >= thirtyDaysAgo && completionDate <= today;
+      }).length
+    );
+  }, 0);
+
+  const totalPossibleCompletions = habits.length * 30;
+  const completionRate =
+    totalPossibleCompletions > 0
+      ? Math.round((completionsLast30Days / totalPossibleCompletions) * 100)
+      : 0;
 
   return (
-    <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Dashboard</h1>
-        <div className="flex items-center gap-4">
-          <Button variant="outline" asChild>
-            <Link href="/dashboard/habits">View All Habits</Link>
-          </Button>
-          <CreateHabitDialog />
-        </div>
-      </div>
+    <div className="container mx-auto max-w-5xl space-y-8 p-8">
+      <Stats
+        habits={habits}
+        currentStreak={currentStreak}
+        longestStreak={longestStreak}
+        completionRate={completionRate}
+        streakDates={streakDates}
+        longestStreakDates={longestStreakDates}
+      />
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <div className="rounded-xl border bg-card p-6">
-          <div className="flex items-center gap-2">
-            <Target className="h-4 w-4 text-muted-foreground" />
-            <div className="text-sm font-medium">Total Habits</div>
-          </div>
-          <div className="mt-2 text-2xl font-bold">{habits?.length ?? 0}</div>
-        </div>
-        <div className="rounded-xl border bg-card p-6">
-          <div className="flex items-center gap-2">
-            <Flame className="h-4 w-4 text-orange-500" />
-            <div className="text-sm font-medium">Active Streak</div>
-          </div>
-          <div className="mt-2 text-2xl font-bold">
-            {getCurrentStreak()} days {getCurrentStreak() > 0 ? "🔥" : ""}
-          </div>
-        </div>
-        <div className="rounded-xl border bg-card p-6">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
-            <div className="text-sm font-medium">Completion Rate</div>
-          </div>
-          <div className="mt-2 text-2xl font-bold">{getCompletionRate()}%</div>
-        </div>
-        <div className="rounded-xl border bg-card p-6">
-          <div className="flex items-center gap-2">
-            <CalendarDays className="h-4 w-4 text-muted-foreground" />
-            <div className="text-sm font-medium">Longest Streak</div>
-          </div>
-          <div className="mt-2 text-2xl font-bold">
-            {getLongestStreak()} days
-          </div>
-        </div>
-      </div>
-
-      <div className="rounded-xl border bg-card">
-        <div className="border-b p-6">
-          <h2 className="text-xl font-semibold">Habit Activity</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Your habit completion activity for the past year
-          </p>
-        </div>
-        <div className="p-6">
-          <ContributionsGrid data={getContributionsData()} />
-        </div>
-      </div>
-
-      <div className="rounded-xl border">
-        <div className="border-b p-6">
-          <h2 className="text-xl font-semibold">Recent Activity</h2>
-        </div>
-        <div className="divide-y">
-          {habits
-            ?.flatMap((habit) =>
-              habit.completions.slice(0, 5).map((completion) => ({
-                habitName: habit.name,
-                date: new Date(completion.date),
-              }))
-            )
-            .sort((a, b) => b.date.getTime() - a.date.getTime())
-            .slice(0, 5)
-            .map((activity, i) => (
-              <div key={i} className="flex items-center gap-4 p-6">
-                <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 dark:bg-emerald-900/30">
-                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                </div>
-                <div>
-                  <div className="font-medium">
-                    {activity.habitName} completed
-                  </div>
-                  <div className="text-sm text-muted-foreground">
-                    {formatRelativeTime(activity.date)}
-                  </div>
-                </div>
-              </div>
-            ))}
-          {(!habits?.length ||
-            !habits.some((h) => h.completions.length > 0)) && (
-            <div className="p-6 text-sm text-muted-foreground">
-              No recent activity. Start by creating a new habit!
-            </div>
-          )}
-        </div>
-      </div>
+      <CalendarView habits={habits} />
     </div>
   );
-}
-
-function formatRelativeTime(date: Date) {
-  const now = new Date();
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-  const diffInMinutes = Math.floor(diffInSeconds / 60);
-  const diffInHours = Math.floor(diffInMinutes / 60);
-  const diffInDays = Math.floor(diffInHours / 24);
-
-  if (diffInDays > 0) {
-    return `${diffInDays} ${diffInDays === 1 ? "day" : "days"} ago`;
-  }
-  if (diffInHours > 0) {
-    return `${diffInHours} ${diffInHours === 1 ? "hour" : "hours"} ago`;
-  }
-  if (diffInMinutes > 0) {
-    return `${diffInMinutes} ${diffInMinutes === 1 ? "minute" : "minutes"} ago`;
-  }
-  return "Just now";
 }

@@ -17,7 +17,11 @@ export async function PATCH(
     const { name, description, frequency } = body;
     const habitId = (await context.params).habitId;
 
-    if (!name || !frequency || !Object.values(HabitFrequency).includes(frequency)) {
+    if (
+      !name ||
+      !frequency ||
+      !Object.values(HabitFrequency).includes(frequency)
+    ) {
       return new NextResponse("Invalid request body", { status: 400 });
     }
 
