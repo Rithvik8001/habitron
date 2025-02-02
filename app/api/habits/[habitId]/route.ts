@@ -3,13 +3,10 @@ import { NextResponse } from "next/server";
 import { updateHabit, deleteHabit } from "@/lib/habits";
 import { HabitFrequency } from "@prisma/client";
 
-type RouteHandlerContext = {
-  params: {
-    habitId: string;
-  };
-};
-
-export async function PATCH(request: Request, context: RouteHandlerContext) {
+export async function PATCH(
+  request: Request,
+  { params }: { params: { habitId: string } }
+) {
   try {
     const { userId } = await auth();
     if (!userId) {
@@ -19,15 +16,11 @@ export async function PATCH(request: Request, context: RouteHandlerContext) {
     const body = await request.json();
     const { name, description, frequency } = body;
 
-    if (
-      !name ||
-      !frequency ||
-      !Object.values(HabitFrequency).includes(frequency)
-    ) {
+    if (!name || !frequency || !Object.values(HabitFrequency).includes(frequency)) {
       return new NextResponse("Invalid request body", { status: 400 });
     }
 
-    const habit = await updateHabit(context.params.habitId, {
+    const habit = await updateHabit(params.habitId, {
       name,
       description,
       frequency,
@@ -40,15 +33,17 @@ export async function PATCH(request: Request, context: RouteHandlerContext) {
   }
 }
 
-export async function DELETE(request: Request, context: RouteHandlerContext) {
+export async function DELETE(
+  request: Request,
+  { params }: { params: { habitId: string } }
+) {
   try {
     const { userId } = await auth();
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    await deleteHabit(context.params.habitId);
-
+    await deleteHabit(params.habitId);
     return new NextResponse(null, { status: 204 });
   } catch (error) {
     console.error("[HABIT_DELETE]", error);
