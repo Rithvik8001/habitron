@@ -3,10 +3,13 @@ import { NextResponse } from "next/server";
 import { updateHabit, deleteHabit } from "@/lib/habits";
 import { HabitFrequency } from "@prisma/client";
 
-export async function PATCH(
-  request: Request,
-  { params }: { params: { habitId: string } }
-) {
+type RouteHandlerContext = {
+  params: {
+    habitId: string;
+  };
+};
+
+export async function PATCH(request: Request, context: RouteHandlerContext) {
   try {
     const { userId } = await auth();
     if (!userId) {
@@ -24,7 +27,7 @@ export async function PATCH(
       return new NextResponse("Invalid request body", { status: 400 });
     }
 
-    const habit = await updateHabit(params.habitId, {
+    const habit = await updateHabit(context.params.habitId, {
       name,
       description,
       frequency,
@@ -37,17 +40,14 @@ export async function PATCH(
   }
 }
 
-export async function DELETE(
-  _request: Request,
-  { params }: { params: { habitId: string } }
-) {
+export async function DELETE(request: Request, context: RouteHandlerContext) {
   try {
     const { userId } = await auth();
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    await deleteHabit(params.habitId);
+    await deleteHabit(context.params.habitId);
 
     return new NextResponse(null, { status: 204 });
   } catch (error) {
