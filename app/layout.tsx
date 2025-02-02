@@ -1,21 +1,14 @@
 import type { Metadata } from "next";
-import "./globals.css";
 import { ClerkProvider } from "@clerk/nextjs";
 import { QueryProvider } from "@/providers/query-provider";
+import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "@/components/ui/toaster";
+import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Habitron - AI-Powered Habit Tracker",
-  description: "Build better habits with AI-powered insights and tracking",
+  title: "Habitron - Track and Build Better Habits",
+  description: "Track your habits, build better routines, and achieve your goals.",
   icons: [{ rel: "icon", url: "/favicon.ico" }],
-  keywords: [
-    "habit tracking",
-    "AI habits",
-    "habit formation",
-    "productivity",
-    "self-improvement",
-    "habit tracker",
-    "goal tracking",
-  ],
 };
 
 export default function RootLayout({
@@ -25,9 +18,17 @@ export default function RootLayout({
 }) {
   return (
     <ClerkProvider>
-      <html lang="en">
+      <html lang="en" suppressHydrationWarning>
         <body>
-          <QueryProvider>{children}</QueryProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <QueryProvider>{children}</QueryProvider>
+            <Toaster />
+          </ThemeProvider>
         </body>
       </html>
     </ClerkProvider>

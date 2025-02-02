@@ -14,15 +14,16 @@ import { Settings2 } from "lucide-react";
 
 interface EditHabitDialogProps {
   habit: Habit;
+  id?: string;
 }
 
-export function EditHabitDialog({ habit }: EditHabitDialogProps) {
+export function EditHabitDialog({ habit, id }: EditHabitDialogProps) {
   const [open, setOpen] = useState(false);
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon">
+        <Button variant="ghost" size="icon" id={id}>
           <Settings2 className="h-4 w-4" />
         </Button>
       </DialogTrigger>

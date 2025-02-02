@@ -5,6 +5,7 @@ import { Menu, X } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { UserButton, SignedIn, SignedOut } from "@clerk/nextjs";
+import { motion, AnimatePresence } from "framer-motion";
 
 export function Header() {
   const [isOpen, setIsOpen] = useState(false);
@@ -18,119 +19,144 @@ export function Header() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  const toggleMenu = () => {
+    setIsOpen(!isOpen);
+    // Prevent scrolling when menu is open
+    if (!isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+  };
+
   return (
-    <header
-      className={`fixed inset-x-0 top-0 z-50 backdrop-blur duration-200 ${
-        hasScrolled ? "bg-background/80" : "bg-transparent"
-      }`}
-    >
-      <nav
-        className="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8"
-        aria-label="Global"
-      >
-        <div className="flex lg:flex-1">
-          <Link
-            href="/"
-            className="-m-1.5 p-1.5 text-3xl tracking-tighter font-extrabold"
-          >
-            Habitron
-          </Link>
-        </div>
-        <div className="flex lg:hidden">
-          <button
-            type="button"
-            className="-m-2.5 inline-flex items-center justify-center rounded-md p-2.5"
-            onClick={() => setIsOpen(true)}
-          >
-            <span className="sr-only">Open main menu</span>
-            <Menu className="h-6 w-6" aria-hidden="true" />
-          </button>
-        </div>
-        <div className="hidden lg:flex lg:gap-x-12">
-          <Link
-            href="#features"
-            className="text-sm font-semibold leading-6 hover:text-primary"
-          >
-            Features
-          </Link>
-          <Link
-            href="#pricing"
-            className="text-sm font-semibold leading-6 hover:text-primary"
-          >
-            Pricing
-          </Link>
-        </div>
-        <div className="hidden lg:flex lg:flex-1 lg:justify-end lg:gap-x-4">
-          <SignedOut>
-            <Button variant="ghost" asChild>
-              <Link href="/sign-in">Sign in</Link>
-            </Button>
-            <Button asChild>
-              <Link href="/sign-up">Get Started</Link>
-            </Button>
-          </SignedOut>
-          <SignedIn>
-            <Button variant="ghost" asChild>
-              <Link href="/dashboard">Dashboard</Link>
-            </Button>
-            <UserButton afterSignOutUrl="/" />
-          </SignedIn>
-        </div>
-      </nav>
-      <div
-        className={`lg:hidden ${
-          isOpen
-            ? "fixed inset-0 z-50 bg-white"
-            : "pointer-events-none hidden opacity-0"
+    <>
+      <header
+        className={`fixed inset-x-0 top-0 z-50 backdrop-blur duration-200 ${
+          hasScrolled ? "bg-background/80" : "bg-transparent"
         }`}
       >
-        <div className="fixed inset-y-0 right-0 z-50 w-full px-6 py-6">
-          <div className="flex items-center justify-between">
-            <Link href="/" className="-m-1.5 p-1.5 text-xl font-bold">
+        <nav
+          className="mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8"
+          aria-label="Global"
+        >
+          <div className="flex lg:flex-1">
+            <Link
+              href="/"
+              className="-m-1.5 p-1.5 text-3xl tracking-tighter font-extrabold"
+            >
               Habitron
             </Link>
-            <button
-              type="button"
-              className="-m-2.5 rounded-md p-2.5"
-              onClick={() => setIsOpen(false)}
-            >
-              <span className="sr-only">Close menu</span>
-              <X className="h-6 w-6" aria-hidden="true" />
-            </button>
           </div>
-          <div className="mt-6 flow-root">
-            <div className="-my-6 divide-y divide-gray-500/10">
-              <div className="space-y-2 py-6">
+          <div className="flex lg:hidden">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleMenu}
+              aria-label="Toggle menu"
+            >
+              <Menu className="h-6 w-6" />
+            </Button>
+          </div>
+          <div className="hidden lg:flex lg:gap-x-12">
+            <Link
+              href="#features"
+              className="text-sm font-semibold leading-6 hover:text-primary"
+            >
+              Features
+            </Link>
+            <Link
+              href="#pricing"
+              className="text-sm font-semibold leading-6 hover:text-primary"
+            >
+              Pricing
+            </Link>
+          </div>
+          <div className="hidden lg:flex lg:flex-1 lg:justify-end lg:gap-x-4">
+            <SignedOut>
+              <Button variant="ghost" asChild>
+                <Link href="/sign-in">Sign in</Link>
+              </Button>
+              <Button asChild>
+                <Link href="/sign-up">Get Started</Link>
+              </Button>
+            </SignedOut>
+            <SignedIn>
+              <Button variant="ghost" asChild>
+                <Link href="/dashboard">Dashboard</Link>
+              </Button>
+              <UserButton afterSignOutUrl="/" />
+            </SignedIn>
+          </div>
+        </nav>
+      </header>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "tween", duration: 0.3 }}
+            className="fixed inset-0 z-50 bg-background lg:hidden"
+          >
+            <div className="flex h-full flex-col">
+              <div className="flex items-center justify-between px-6 py-4 border-b">
                 <Link
-                  href="#features"
-                  className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 hover:bg-gray-50"
-                  onClick={() => setIsOpen(false)}
+                  href="/"
+                  className="text-xl font-bold"
+                  onClick={toggleMenu}
                 >
-                  Features
+                  Habitron
                 </Link>
-                <Link
-                  href="#pricing"
-                  className="-mx-3 block rounded-lg px-3 py-2 text-base font-semibold leading-7 hover:bg-gray-50"
-                  onClick={() => setIsOpen(false)}
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={toggleMenu}
+                  aria-label="Close menu"
                 >
-                  Pricing
-                </Link>
+                  <X className="h-6 w-6" />
+                </Button>
               </div>
-              <div className="py-6">
+              <nav className="flex-1 overflow-y-auto px-6 py-8">
+                <div className="space-y-6">
+                  <Link
+                    href="#features"
+                    className="block text-lg font-semibold hover:text-primary"
+                    onClick={toggleMenu}
+                  >
+                    Features
+                  </Link>
+                  <Link
+                    href="#pricing"
+                    className="block text-lg font-semibold hover:text-primary"
+                    onClick={toggleMenu}
+                  >
+                    Pricing
+                  </Link>
+                </div>
+              </nav>
+              <div className="border-t px-6 py-8">
                 <SignedOut>
                   <div className="space-y-4">
-                    <Button variant="ghost" className="w-full" asChild>
-                      <Link href="/sign-in">Sign in</Link>
+                    <Button variant="outline" className="w-full" asChild>
+                      <Link href="/sign-in" onClick={toggleMenu}>
+                        Sign in
+                      </Link>
                     </Button>
                     <Button className="w-full" asChild>
-                      <Link href="/sign-up">Get Started</Link>
+                      <Link href="/sign-up" onClick={toggleMenu}>
+                        Get Started
+                      </Link>
                     </Button>
                   </div>
                 </SignedOut>
                 <SignedIn>
                   <div className="space-y-4">
-                    <Button variant="ghost" className="w-full" asChild>
-                      <Link href="/dashboard">Dashboard</Link>
+                    <Button variant="outline" className="w-full" asChild>
+                      <Link href="/dashboard" onClick={toggleMenu}>
+                        Dashboard
+                      </Link>
                     </Button>
                     <div className="flex justify-center">
                       <UserButton afterSignOutUrl="/" />
@@ -139,9 +165,9 @@ export function Header() {
                 </SignedIn>
               </div>
             </div>
-          </div>
-        </div>
-      </div>
-    </header>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </>
   );
 }

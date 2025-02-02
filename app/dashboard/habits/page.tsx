@@ -21,9 +21,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, Circle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
+import { HabitSwipeActions } from "@/components/habit-swipe-actions";
+import { cn } from "@/lib/utils";
 
 export default function HabitsPage() {
   const { habits, isLoading, getCompletionsForDate } = useHabits();
@@ -55,8 +57,8 @@ export default function HabitsPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">My Habits</h1>
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <h1 className="text-2xl sm:text-3xl font-bold">My Habits</h1>
         <CreateHabitDialog />
       </div>
 
@@ -76,17 +78,102 @@ export default function HabitsPage() {
               <CreateHabitDialog />
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Frequency</TableHead>
-                  <TableHead>Last Completed</TableHead>
-                  <TableHead>Today&apos;s Status</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
+            <>
+              {/* Desktop view */}
+              <div className="hidden sm:block overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[30%]">Name</TableHead>
+                      <TableHead className="w-[15%]">Frequency</TableHead>
+                      <TableHead className="w-[20%]">Last Completed</TableHead>
+                      <TableHead className="w-[15%]">
+                        Today&apos;s Status
+                      </TableHead>
+                      <TableHead className="w-[20%] text-right">
+                        Actions
+                      </TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {habits?.map((habit) => {
+                      const lastCompletion = habit.completions
+                        .map((c) => new Date(c.date))
+                        .sort((a, b) => b.getTime() - a.getTime())[0];
+                      const isCompletedToday = getCompletionsForDate(
+                        habit.id,
+                        new Date()
+                      );
+
+                      return (
+                        <TableRow key={habit.id}>
+                          <TableCell className="font-medium">
+                            <div>{habit.name}</div>
+                            {habit.description && (
+                              <div className="text-sm text-muted-foreground">
+                                {habit.description}
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="secondary">{habit.frequency}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            {lastCompletion ? (
+                              formatRelativeTime(lastCompletion)
+                            ) : (
+                              <span className="text-muted-foreground">
+                                Never
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {isCompletedToday ? (
+                              <div className="flex items-center text-emerald-500">
+                                <CheckCircle2 className="mr-1.5 h-4 w-4" />
+                                <span className="hidden sm:inline">
+                                  Completed
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center text-muted-foreground">
+                                <XCircle className="mr-1.5 h-4 w-4" />
+                                <span className="hidden sm:inline">
+                                  Not Completed
+                                </span>
+                              </div>
+                            )}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex flex-col sm:flex-row items-center justify-end gap-2">
+                              <Button
+                                variant={
+                                  isCompletedToday ? "destructive" : "default"
+                                }
+                                disabled={isCompletionLoading}
+                                onClick={() => {
+                                  if (isCompletedToday) {
+                                    uncompleteHabit({ habitId: habit.id });
+                                  } else {
+                                    completeHabit({ habitId: habit.id });
+                                  }
+                                }}
+                                className="w-full sm:w-auto"
+                              >
+                                {isCompletedToday ? "Uncomplete" : "Complete"}
+                              </Button>
+                              <EditHabitDialog habit={habit} />
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Mobile view */}
+              <div className="sm:hidden space-y-3">
                 {habits?.map((habit) => {
                   const lastCompletion = habit.completions
                     .map((c) => new Date(c.date))
@@ -97,65 +184,67 @@ export default function HabitsPage() {
                   );
 
                   return (
-                    <TableRow key={habit.id}>
-                      <TableCell>
-                        <div>
-                          <div className="font-medium">{habit.name}</div>
+                    <div
+                      key={habit.id}
+                      className="rounded-lg border bg-card p-3"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0 flex-1">
+                          <div className="font-medium truncate pr-2">
+                            {habit.name}
+                          </div>
                           {habit.description && (
-                            <div className="text-sm text-muted-foreground">
+                            <div className="mt-0.5 text-sm text-muted-foreground line-clamp-1">
                               {habit.description}
                             </div>
                           )}
+                          <div className="mt-1.5 flex items-center gap-2">
+                            <Badge variant="secondary" className="text-xs">
+                              {habit.frequency}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground truncate">
+                              {lastCompletion
+                                ? formatRelativeTime(lastCompletion)
+                                : "Never completed"}
+                            </span>
+                          </div>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="secondary">{habit.frequency}</Badge>
-                      </TableCell>
-                      <TableCell>
-                        {lastCompletion ? (
-                          formatRelativeTime(lastCompletion)
-                        ) : (
-                          <span className="text-muted-foreground">Never</span>
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        {isCompletedToday ? (
-                          <div className="flex items-center text-emerald-500">
-                            <CheckCircle2 className="mr-1.5 h-4 w-4" />
-                            Completed
-                          </div>
-                        ) : (
-                          <div className="flex items-center text-muted-foreground">
-                            <XCircle className="mr-1.5 h-4 w-4" />
-                            Not Completed
-                          </div>
-                        )}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant={
-                              isCompletedToday ? "destructive" : "default"
+                        <div className="flex-shrink-0">
+                          {isCompletedToday ? (
+                            <div className="flex items-center text-emerald-500">
+                              <CheckCircle2 className="h-5 w-5" />
+                            </div>
+                          ) : (
+                            <div className="flex items-center text-muted-foreground">
+                              <Circle className="h-5 w-5" />
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-end gap-2 mt-2 pt-2 border-t">
+                        <Button variant="ghost" size="sm" onClick={() => {}}>
+                          Edit
+                        </Button>
+                        <Button
+                          variant={isCompletedToday ? "destructive" : "default"}
+                          size="sm"
+                          disabled={isCompletionLoading}
+                          onClick={() => {
+                            if (isCompletedToday) {
+                              uncompleteHabit({ habitId: habit.id });
+                            } else {
+                              completeHabit({ habitId: habit.id });
                             }
-                            disabled={isCompletionLoading}
-                            onClick={() => {
-                              if (isCompletedToday) {
-                                uncompleteHabit({ habitId: habit.id });
-                              } else {
-                                completeHabit({ habitId: habit.id });
-                              }
-                            }}
-                          >
-                            {isCompletedToday ? "Uncomplete" : "Complete"}
-                          </Button>
-                          <EditHabitDialog habit={habit} />
-                        </div>
-                      </TableCell>
-                    </TableRow>
+                          }}
+                        >
+                          {isCompletedToday ? "Uncomplete" : "Complete"}
+                        </Button>
+                      </div>
+                    </div>
                   );
                 })}
-              </TableBody>
-            </Table>
+              </div>
+            </>
           )}
         </CardContent>
       </Card>
