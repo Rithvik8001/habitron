@@ -143,3 +143,18 @@
     @apply opacity-100;
   }
 }
+
+@keyframes scribble {
+  0% {
+    stroke-dasharray: 0 1;
+    stroke-dashoffset: 1;
+  }
+  100% {
+    stroke-dasharray: 1 0;
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-scribble {
+  animation: scribble 0.5s linear forwards;
+}

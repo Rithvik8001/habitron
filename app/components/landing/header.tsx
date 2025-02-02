@@ -66,10 +66,10 @@ export function Header() {
               Features
             </Link>
             <Link
-              href="#pricing"
-              className="text-sm font-semibold leading-6 hover:text-primary"
+              href="#testimonials"
+              className="text-sm font-medium transition-colors hover:text-primary"
             >
-              Pricing
+              Testimonials
             </Link>
           </div>
           <div className="hidden lg:flex lg:flex-1 lg:justify-end lg:gap-x-4">
@@ -128,11 +128,11 @@ export function Header() {
                     Features
                   </Link>
                   <Link
-                    href="#pricing"
-                    className="block text-lg font-semibold hover:text-primary"
+                    href="#testimonials"
+                    className="block text-lg font-medium transition-colors hover:text-primary"
                     onClick={toggleMenu}
                   >
-                    Pricing
+                    Testimonials
                   </Link>
                 </div>
               </nav>

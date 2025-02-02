@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { BarChart, Calendar, Home, Settings, Target, X } from "lucide-react";
+import { BarChart, Home, Settings, Target, X } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -23,12 +23,6 @@ const routes = [
     icon: Target,
     href: "/dashboard/habits",
     color: "text-violet-500",
-  },
-  {
-    label: "Calendar",
-    icon: Calendar,
-    color: "text-pink-700",
-    href: "/dashboard/calendar",
   },
   {
     label: "Analytics",
