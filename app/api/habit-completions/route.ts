@@ -40,10 +40,10 @@ export async function POST(request: Request) {
     // Only allow completing habits for the current day
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
-    
+
     if (completionDate >= tomorrow || completionDate < today) {
       return new NextResponse(
         JSON.stringify({
@@ -102,10 +102,10 @@ export async function DELETE(request: Request) {
     // Only allow uncompleting habits for the current day
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
-    
+
     if (completionDate >= tomorrow || completionDate < today) {
       return new NextResponse(
         JSON.stringify({

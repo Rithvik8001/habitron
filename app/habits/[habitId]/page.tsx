@@ -1,16 +1,16 @@
-import { auth } from "@clerk/nextjs/server";
-import { notFound } from "next/navigation";
 import { Metadata } from "next";
-
+import { notFound } from "next/navigation";
+import { auth } from "@clerk/nextjs/server";
 import { format } from "date-fns";
 import { getHabitWithCompletions, getHabitHistory } from "@/lib/habits";
 import { HabitStatus } from "./components/habit-status";
 
-interface HabitPageProps {
+type HabitPageProps = {
   params: {
     habitId: string;
   };
-}
+  searchParams: { [key: string]: string | string[] | undefined };
+};
 
 export async function generateMetadata({
   params,

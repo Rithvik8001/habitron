@@ -12,7 +12,7 @@ interface HabitStatusProps {
 
 export function HabitStatus({ habit }: HabitStatusProps) {
   const [isCompleted, setIsCompleted] = useState(habit.isCompletedToday);
-  const { completeHabit, uncompleteHabit, isLoading } = useHabitCompletion();
+  const { completeHabit, uncompleteHabit } = useHabitCompletion();
   const [loadingHabitId, setLoadingHabitId] = useState<string | null>(null);
 
   // Reset completion status at midnight

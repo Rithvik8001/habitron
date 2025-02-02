@@ -33,11 +33,14 @@ export function ContributionsGrid({ data }: ContributionsGridProps) {
             {days.map((day) => {
               const index = week * 7 + day;
               const contribution = data[index];
-              const tooltipContent = contribution?.habits.length > 0
-                ? `${formatDate(contribution.date)}\nCompleted Habits:\n${contribution.habits
-                    .map((h) => `• ${h.name}`)
-                    .join("\n")}`
-                : `${formatDate(contribution.date)}\nNo habits completed`;
+              const tooltipContent =
+                contribution?.habits.length > 0
+                  ? `${formatDate(
+                      contribution.date
+                    )}\nCompleted Habits:\n${contribution.habits
+                      .map((h) => `• ${h.name}`)
+                      .join("\n")}`
+                  : `${formatDate(contribution.date)}\nNo habits completed`;
 
               return (
                 <div
