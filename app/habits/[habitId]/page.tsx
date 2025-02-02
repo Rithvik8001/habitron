@@ -1,9 +1,33 @@
 import { auth } from "@clerk/nextjs/server";
 import { notFound } from "next/navigation";
+import { Metadata } from "next";
 
 import { format } from "date-fns";
 import { getHabitWithCompletions, getHabitHistory } from "@/lib/habits";
 import { HabitStatus } from "./components/habit-status";
+
+interface HabitPageProps {
+  params: {
+    habitId: string;
+  };
+}
+
+export async function generateMetadata({
+  params,
+}: HabitPageProps): Promise<Metadata> {
+  const habit = await getHabitWithCompletions(params.habitId);
+
+  if (!habit) {
+    return {
+      title: "Habit Not Found",
+    };
+  }
+
+  return {
+    title: habit.name,
+    description: `Track your progress for ${habit.name}`,
+  };
+}
 
 async function getHabitDetails(habitId: string) {
   const { userId } = await auth();
@@ -27,11 +51,7 @@ async function getHabitDetails(habitId: string) {
   };
 }
 
-export default async function HabitPage({
-  params,
-}: {
-  params: { habitId: string };
-}) {
+export default async function HabitPage({ params }: HabitPageProps) {
   const habit = await getHabitDetails(params.habitId);
 
   if (!habit) {

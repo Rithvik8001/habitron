@@ -17,28 +17,33 @@ export function useHabitCompletion() {
       await queryClient.cancelQueries({ queryKey: ["habits"] });
 
       // Snapshot the previous value
-      const previousHabits = queryClient.getQueryData<HabitWithCompletions[]>(["habits"]);
+      const previousHabits = queryClient.getQueryData<HabitWithCompletions[]>([
+        "habits",
+      ]);
 
       // Optimistically update habits
-      queryClient.setQueryData<HabitWithCompletions[]>(["habits"], (old = []) => {
-        return old.map((habit) => {
-          if (habit.id === habitId) {
-            return {
-              ...habit,
-              completions: [
-                {
-                  id: "temp-" + Date.now(),
-                  habitId,
-                  date: date || new Date(),
-                  createdAt: new Date(),
-                  updatedAt: new Date(),
-                },
-              ],
-            };
-          }
-          return habit;
-        });
-      });
+      queryClient.setQueryData<HabitWithCompletions[]>(
+        ["habits"],
+        (old = []) => {
+          return old.map((habit) => {
+            if (habit.id === habitId) {
+              return {
+                ...habit,
+                completions: [
+                  {
+                    id: "temp-" + Date.now(),
+                    habitId,
+                    date: date || new Date(),
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                  },
+                ],
+              };
+            }
+            return habit;
+          });
+        }
+      );
 
       return { previousHabits };
     },
@@ -60,19 +65,24 @@ export function useHabitCompletion() {
     onMutate: async ({ habitId }) => {
       await queryClient.cancelQueries({ queryKey: ["habits"] });
 
-      const previousHabits = queryClient.getQueryData<HabitWithCompletions[]>(["habits"]);
+      const previousHabits = queryClient.getQueryData<HabitWithCompletions[]>([
+        "habits",
+      ]);
 
-      queryClient.setQueryData<HabitWithCompletions[]>(["habits"], (old = []) => {
-        return old.map((habit) => {
-          if (habit.id === habitId) {
-            return {
-              ...habit,
-              completions: [],
-            };
-          }
-          return habit;
-        });
-      });
+      queryClient.setQueryData<HabitWithCompletions[]>(
+        ["habits"],
+        (old = []) => {
+          return old.map((habit) => {
+            if (habit.id === habitId) {
+              return {
+                ...habit,
+                completions: [],
+              };
+            }
+            return habit;
+          });
+        }
+      );
 
       return { previousHabits };
     },
